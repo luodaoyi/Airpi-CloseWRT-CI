@@ -17,7 +17,7 @@ on:
         required: true
         type: string
       WRT_WORD:
-        required: true
+        required: false
         type: string
       WRT_IP:
         required: true
@@ -47,7 +47,7 @@ env:
   WRT_THEME: ${{inputs.WRT_THEME}}
   WRT_NAME: ${{inputs.WRT_NAME}}
   WRT_SSID: ${{inputs.WRT_SSID}}
-  WRT_WORD: ${{inputs.WRT_WORD}}
+  #WRT_WORD: ${{inputs.WRT_WORD}}
   WRT_IP: ${{inputs.WRT_IP}}
   WRT_PW: ${{inputs.WRT_PW}}
   WRT_REPO: ${{inputs.WRT_REPO}}
@@ -234,10 +234,7 @@ jobs:
           tag_name: ${{env.WRT_CONFIG}}-${{env.WRT_INFO}}-${{env.WRT_DATE}}
           files: ./wrt/upload/*.*
           body: |
-            这是个平台固件包，内含多个设备！
-            请注意选择你需要的设备固件！
-            不要问，刷就完事了！
-
+            这是个airpi固件包！
             全系带闭源硬件加速，别问了！
 
             源码：${{env.WRT_REPO}}
@@ -251,7 +248,7 @@ jobs:
             登录密码：${{env.WRT_PW}}
 
             WIFI名称：${{env.WRT_SSID}}
-            WIFI密码：${{env.WRT_WORD}}
+            WIFI密码：无
 
             内核版本：${{env.WRT_KVER}}
             插件列表：${{env.WRT_LIST}}
