@@ -8,7 +8,7 @@ https://github.com/padavanonly/immortalwrt-mt798x-24.10.git
 # 固件说明：
 
 Airpi 5g cpe专用精简版
-加入Qmodem ttyd HomeProxy Xfrpc
+开启usboffload 加入Qmodem ttyd HomeProxy Xfrpc
 
 默认主机名：Airpi
 默认WIFI名称： Airpi
