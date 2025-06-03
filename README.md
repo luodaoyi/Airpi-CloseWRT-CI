@@ -8,12 +8,17 @@ https://github.com/padavanonly/immortalwrt-mt798x-24.10.git
 # 固件说明：
 
 Airpi 5g cpe专用精简版
+
 开启usboffload 加入Qmodem ttyd HomeProxy Xfrpc
 
 默认主机名：Airpi
+
 默认WIFI名称： Airpi
+
 默认WIFI密码：无
+
 默认地址：192.168.88.1
+
 默认密码，无
 
 固件每天早上4点自动编译。
