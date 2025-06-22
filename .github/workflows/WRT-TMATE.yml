@@ -1,0 +1,158 @@
+#CI项目 - Tmate SSH调试版本
+name: WRT-TMATE
+
+#CI计划
+on:
+  #手动编译
+  workflow_dispatch:
+    inputs:
+      CONFIG:
+        description: '编译配置'
+        default: 'Airpi-modem'
+        required: true
+        type: choice
+        options:
+          - Airpi-modem
+          - Airpi-qmodem
+          - TEST
+      SOURCE:
+        description: '源码仓库'
+        default: 'Starktomy/immortalwrt-mt798x-24.10'
+        required: true
+        type: choice
+        options:
+         - Starktomy/immortalwrt-mt798x-24.10
+         - padavanonly/immortalwrt-mt798x-24.10
+         - NekokeCore/immortalwrt-mt798x-24.10
+      BRANCH:
+        description: '源码分支'
+        default: '2410'
+        required: true
+        type: string
+      TMATE_DEBUG:
+        description: '在哪个阶段开启SSH调试'
+        default: 'before-config'
+        required: true
+        type: choice
+        options:
+          - before-config
+          - after-config
+          - before-compile
+          - on-failure
+
+#CI权限
+permissions: write-all
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+#CI任务
+jobs:
+  tmate-debug:
+    name: Tmate-${{inputs.CONFIG}}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Projects
+        uses: actions/checkout@main
+
+      - name: Initialization Environment
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo -E apt -yqq purge firefox
+          sudo -E apt -yqq update
+          sudo -E apt -yqq full-upgrade
+          sudo -E apt -yqq autoremove --purge
+          sudo -E apt -yqq autoclean
+          sudo -E apt -yqq clean
+          sudo -E apt -yqq install dos2unix python3-netifaces libfuse-dev
+          sudo bash -c 'bash <(curl -sL https://build-scripts.immortalwrt.org/init_build_environment.sh)'
+          sudo -E systemctl daemon-reload
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
+
+          sudo mkdir -p /mnt/build_wrt
+          sudo chown $USER:$USER /mnt/build_wrt
+          sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
+
+      - name: Clone Code
+        run: |
+          git clone --depth=1 --single-branch --branch ${{inputs.BRANCH}} https://github.com/${{inputs.SOURCE}}.git ./wrt/
+
+      - name: Update Feeds
+        run: |
+          cd ./wrt/
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+
+      - name: Custom Packages
+        run: |
+          cd ./wrt/package/
+          $GITHUB_WORKSPACE/Scripts/Packages.sh
+          $GITHUB_WORKSPACE/Scripts/Handles.sh
+
+      - name: SSH Debug Before Config
+        if: ${{inputs.TMATE_DEBUG == 'before-config'}}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
+
+      - name: Custom Settings
+        run: |
+          cd ./wrt/
+          
+          if [[ "${{inputs.CONFIG}}" == *"TEST"* ]]; then
+            cat $GITHUB_WORKSPACE/Config/${{inputs.CONFIG}}.txt >> .config
+          else
+            find ./defconfig -type f -iname "mt7981-ax3000-gsw-usboffload.config" -exec cat {} + | sort | uniq > .config
+            $GITHUB_WORKSPACE/Scripts/Settings.sh
+            cat $GITHUB_WORKSPACE/Config/${{inputs.CONFIG}}.txt $GITHUB_WORKSPACE/Config/GENERAL.txt >> .config
+          fi
+          
+          make defconfig -j$(nproc)
+
+      - name: SSH Debug After Config
+        if: ${{inputs.TMATE_DEBUG == 'after-config'}}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
+
+      - name: Download Packages
+        run: |
+          cd ./wrt/
+          make download -j$(nproc)
+
+      - name: SSH Debug Before Compile
+        if: ${{inputs.TMATE_DEBUG == 'before-compile'}}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
+
+      - name: Compile Firmware
+        id: compile
+        continue-on-error: true
+        run: |
+          cd ./wrt/
+          make -j$(nproc) || make -j$(nproc) V=s
+
+      - name: SSH Debug On Failure
+        if: ${{failure() && inputs.TMATE_DEBUG == 'on-failure'}}
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: false
+
+      - name: Check Compile Status
+        if: steps.compile.outcome == 'failure'
+        run: exit 1
+
+      - name: Upload Config
+        uses: actions/upload-artifact@main
+        with:
+          name: Config-${{inputs.CONFIG}}-${{github.run_id}}
+          path: ./wrt/.config
+
+      - name: Upload Firmware
+        if: steps.compile.outcome == 'success'
+        uses: actions/upload-artifact@main
+        with:
+          name: Firmware-${{inputs.CONFIG}}-${{github.run_id}}
+          path: ./wrt/bin/targets/*/*/ 

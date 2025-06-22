@@ -48,11 +48,13 @@ UPDATE_PACKAGE() {
 UPDATE_PACKAGE "argon" "sbwml/luci-theme-argon" "openwrt-24.10"
 UPDATE_PACKAGE "kucat" "sirpdboy/luci-theme-kucat" "js"
 
-UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
+#UPDATE_PACKAGE "homeproxy" "VIKINGYFY/homeproxy" "main"
 UPDATE_PACKAGE "nikki" "nikkinikki-org/OpenWrt-nikki" "main"
 UPDATE_PACKAGE "openclash" "vernesong/OpenClash" "dev" "pkg"
 UPDATE_PACKAGE "passwall" "xiaorouji/openwrt-passwall" "main" "pkg"
 UPDATE_PACKAGE "passwall2" "xiaorouji/openwrt-passwall2" "main" "pkg"
+UPDATE_PACKAGE "zerotier" "sbwml/packages_lang_golang" "main" "" "golang"
+UPDATE_PACKAGE "luci-app-zerotier" "sbwml/luci-app-zerotier" "main"
 UPDATE_PACKAGE "luci-app-tailscale" "asvow/luci-app-tailscale" "main"
 UPDATE_PACKAGE "ddns-go" "sirpdboy/luci-app-ddns-go" "main"
 UPDATE_PACKAGE "easytier" "EasyTier/luci-app-easytier" "main"
@@ -69,6 +71,8 @@ UPDATE_PACKAGE "vnt" "lmq8267/luci-app-vnt" "main"
 UPDATE_PACKAGE "istore" "linkease/istore" "main"
 UPDATE_PACKAGE "nas-packages" "linkease/nas-packages" "main"
 UPDATE_PACKAGE "nas-packages-luci" "linkease/nas-packages-luci" "main"
+UPDATE_PACKAGE "luci-app-ssr-plus" "fw876/helloworld" "master"
+
 #更新软件包版本
 UPDATE_VERSION() {
 	local PKG_NAME=$1
